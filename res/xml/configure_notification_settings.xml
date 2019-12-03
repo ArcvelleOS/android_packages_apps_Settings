@@ -150,6 +150,13 @@
             android:title="@string/notification_polite_title"
             settings:controller="com.android.settings.notification.PoliteNotificationsPreferenceController" />
 
+        <co.aospa.framework.preference.SystemSettingSwitchPreference
+            android:key="notification_sound_vib_screen_on"
+            android:order="19"
+            android:title="@string/notification_sound_vib_screen_on_title"
+            android:summary="@string/notification_sound_vib_screen_on_summary"
+            android:defaultValue="false" />
+
         <SwitchPreferenceCompat
             android:key="lock_screen_notif_minimalism"
             android:order="20"
