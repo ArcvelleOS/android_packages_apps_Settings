@@ -242,4 +242,6 @@
     <string name="miscellaneous_settings_summary">System tweaks and developer controls</string>
     <string name="allow_app_downgrade_title">Allow app downgrade</string>
     <string name="allow_app_downgrade_summary">Allow installing older versions of already installed applications</string>
+    <string name="no_storage_restriction_title">No storage restriction</string>
+    <string name="no_storage_restriction_summary">Allow full access to Android/data and Android/obb directories</string>
 </resources>
