@@ -240,4 +240,6 @@
     <!-- Miscellaneous settings -->
     <string name="miscellaneous_settings_title">Miscellaneous</string>
     <string name="miscellaneous_settings_summary">System tweaks and developer controls</string>
+    <string name="allow_app_downgrade_title">Allow app downgrade</string>
+    <string name="allow_app_downgrade_summary">Allow installing older versions of already installed applications</string>
 </resources>
