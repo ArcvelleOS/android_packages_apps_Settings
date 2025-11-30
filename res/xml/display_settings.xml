@@ -75,6 +75,12 @@
             android:title="@string/qs_brightness_slider_round_title"
             android:defaultValue="false" />
 
+        <co.aospa.framework.preference.SystemSettingSwitchPreference
+            android:key="single_qs_tone_enabled"
+            android:title="@string/qs_single_tone_title"
+            android:summary="@string/qs_single_tone_summary"
+            android:defaultValue="false" />
+
         <co.aospa.framework.preference.SecureSettingSwitchPreference
             android:key="qs_show_auto_brightness"
             android:title="@string/qs_show_auto_brightness_title"

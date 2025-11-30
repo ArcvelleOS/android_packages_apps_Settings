@@ -25,6 +25,10 @@
     <string name="qs_show_auto_brightness_title">Show auto-brightness button</string>
     <string name="qs_show_auto_brightness_summary">Show the auto-brightness button next to the brightness slider in Quick Settings</string>
 
+    <!-- Single Tone QS -->
+    <string name="qs_single_tone_title">Single tone QS</string>
+    <string name="qs_single_tone_summary">Unify Quick Settings and notification shade into a seamless background</string>
+
     <!-- Minimum auto brightness -->
     <string name="user_min_auto_brightness_title">Minimum auto brightness level</string>
     <string name="user_min_auto_brightness_summary">Limits the lowest brightness level for auto brightness</string>
