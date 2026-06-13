@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SPDX-FileCopyrightText: 2026 Project PenguinOS
+     SPDX-License-Identifier: Apache-2.0 -->
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    android:key="spoofing_settings"
+    android:title="@string/spoof_settings_title">
+
+    <PreferenceCategory
+        android:key="system_spoof_category"
+        android:title="@string/spoof_settings_title">
+
+        <Preference
+            android:key="play_integrity_fix"
+            android:title="@string/play_integrity_fix_title"
+            android:summary="@string/play_integrity_fix_summary"
+            android:fragment="com.android.settings.custom.spoofing.PlayIntegrityFix" />
+
+        <Preference
+            android:key="tricky_store"
+            android:title="@string/tricky_store_title"
+            android:summary="@string/tricky_store_summary"
+            android:fragment="com.android.settings.custom.spoofing.TrickyStore" />
+
+        <Preference
+            android:key="game_spoofing"
+            android:title="@string/game_spoofing_title"
+            android:summary="@string/game_spoofing_summary"
+            android:fragment="com.android.settings.custom.spoofing.GameSpoofing" />
+    </PreferenceCategory>
+</PreferenceScreen>

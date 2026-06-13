@@ -206,6 +206,11 @@ import com.android.settings.sound.AudioOutputSettings;
 import com.android.settings.sound.MediaControlsSettings;
 import com.android.settings.supervision.SupervisionDashboardFragment;
 import com.android.settings.support.SupportDashboardActivity;
+import com.android.settings.custom.spoofing.GameSpoofing;
+import com.android.settings.custom.spoofing.PlayIntegrityFix;
+import com.android.settings.custom.spoofing.SpoofSettings;
+import com.android.settings.custom.spoofing.TrickyStore;
+import com.android.settings.custom.spoofing.TrickyStoreAppSettings;
 import com.android.settings.system.MiscellaneousSettings;
 import com.android.settings.system.ResetDashboardFragment;
 import com.android.settings.system.ShadePanelsFragment;
@@ -370,6 +375,11 @@ public class SettingsGateway {
             MainClear.class.getName(),
             MainClearConfirm.class.getName(),
             MiscellaneousSettings.class.getName(),
+            SpoofSettings.class.getName(),
+            PlayIntegrityFix.class.getName(),
+            TrickyStore.class.getName(),
+            TrickyStoreAppSettings.class.getName(),
+            GameSpoofing.class.getName(),
             ResetDashboardFragment.class.getName(),
             NightDisplaySettings.class.getName(),
             ManageDomainUrls.class.getName(),

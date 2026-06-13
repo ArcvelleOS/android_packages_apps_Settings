@@ -136,6 +136,19 @@
     </PreferenceCategory>
 
     <PreferenceCategory
+        android:key="spoofing_category"
+        android:title="@string/spoof_settings_title"
+        android:order="-345">
+
+        <Preference
+            android:key="spoof_settings"
+            android:title="@string/spoof_settings_title"
+            android:summary="@string/spoofing_category_summary"
+            android:icon="@drawable/ic_spoof_settings"
+            android:fragment="com.android.settings.custom.spoofing.SpoofSettings" />
+    </PreferenceCategory>
+
+    <PreferenceCategory
         android:key="manage_data_category"
         android:title="@string/manage_data_category_title"
         android:order="-340">
