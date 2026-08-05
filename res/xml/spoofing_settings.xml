@@ -27,4 +27,18 @@
             android:summary="@string/game_spoofing_summary"
             android:fragment="com.android.settings.custom.spoofing.GameSpoofing" />
     </PreferenceCategory>
+
+    <!-- Hardware & App Spoofing Category -->
+    <PreferenceCategory
+        android:key="hardware_spoof_category"
+        android:title="@string/hardware_spoof_category_title">
+
+        <!-- Per-App Device Spoofing -->
+        <Preference
+            android:key="user_selectable_app_spoofing"
+            android:title="@string/user_selectable_app_spoofing_title"
+            android:summary="@string/user_selectable_app_spoofing_summary"
+            android:fragment="com.android.settings.system.spoofing.UserSelectedAppSpoofSettings" />
+    </PreferenceCategory>
+
 </PreferenceScreen>
