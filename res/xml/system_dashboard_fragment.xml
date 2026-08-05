@@ -200,4 +200,18 @@
             settings:controller="com.android.settings.system.ResetPreferenceController"/>
 
     </PreferenceCategory>
+
+    <PreferenceCategory
+        android:key="obscura_category"
+        android:title="@string/obscura_title"
+        android:order="-320">
+
+        <Preference
+            android:key="obscura_settings"
+            android:title="@string/obscura_title"
+            android:summary="@string/obscura_summary"
+            android:icon="@drawable/ic_privacy_shield_24dp"
+            android:fragment="com.android.settings.custom.obscura.ObscuraAppSettings"/>
+
+    </PreferenceCategory>
 </PreferenceScreen>

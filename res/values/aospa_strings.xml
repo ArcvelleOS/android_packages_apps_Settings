@@ -392,4 +392,11 @@
     <string name="app_spoofing_longpress_hint">Long press to quickly reassign profile</string>
     <string name="app_spoofing_remove_title">Remove app?</string>
     <string name="app_spoofing_remove_confirm">Remove %1$s from the spoofing list?</string>
+
+    <!-- Obscura -->
+    <string name="obscura_title">Obscura</string>
+    <string name="obscura_summary">App hiding, sandboxing and settings spoofing</string>
+    <string name="obscura_apps_title">App Control</string>
+    <string name="obscura_manage_apps_title">Manage apps</string>
+    <string name="obscura_manage_apps_summary">Configure hiding, sandbox and spoof settings per app</string>
 </resources>
