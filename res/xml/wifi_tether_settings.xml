@@ -49,6 +49,32 @@
         android:title="@string/wifi_hotspot_auto_off_title"
         android:summary="@string/wifi_hotspot_auto_off_summary"/>
 
+    <PreferenceCategory
+        android:key="hotspot_data_limit_category"
+        android:title="@string/one_time_data_limit_title">
+
+        <co.aospa.framework.preference.GlobalSettingSwitchPreference
+            android:key="hotspot_data_limit_enabled"
+            android:title="@string/one_time_data_limit_title"
+            android:defaultValue="false" />
+
+        <co.aospa.framework.preference.GlobalSettingListPreference
+            android:key="hotspot_data_limit_bytes"
+            android:title="@string/one_time_data_limit_size"
+            android:entries="@array/hotspot_data_limit_size_entries"
+            android:entryValues="@array/hotspot_data_limit_size_values"
+            android:defaultValue="52428800"
+            android:dependency="hotspot_data_limit_enabled" />
+
+        <co.aospa.framework.preference.GlobalSettingListPreference
+            android:key="hotspot_data_limit_action"
+            android:title="@string/one_time_data_limit_when_exceeded"
+            android:entries="@array/hotspot_data_limit_action_entries"
+            android:entryValues="@array/hotspot_data_limit_action_values"
+            android:defaultValue="0"
+            android:dependency="hotspot_data_limit_enabled" />
+    </PreferenceCategory>
+
     <SwitchPreferenceCompat
         android:key="wifi_tether_maximize_compatibility"
         android:title="@string/wifi_hotspot_maximize_compatibility"/>

@@ -4972,4 +4972,28 @@
         <item>Quick settings</item>
         <item>Lockscreen</item>
     </string-array>
+
+    <!-- Wi-Fi hotspot data limit choices -->
+    <string-array name="hotspot_data_limit_size_entries">
+        <item>@string/hotspot_data_limit_size_50mb</item>
+        <item>@string/hotspot_data_limit_size_100mb</item>
+        <item>@string/hotspot_data_limit_size_500mb</item>
+        <item>@string/hotspot_data_limit_size_1gb</item>
+        <item>@string/hotspot_data_limit_size_5gb</item>
+    </string-array>
+    <string-array name="hotspot_data_limit_size_values" translatable="false">
+        <item>52428800</item>
+        <item>104857600</item>
+        <item>524288000</item>
+        <item>1073741824</item>
+        <item>5368709120</item>
+    </string-array>
+    <string-array name="hotspot_data_limit_action_entries">
+        <item>@string/one_time_data_limit_turn_off_notify</item>
+        <item>@string/one_time_data_limit_notify_only</item>
+    </string-array>
+    <string-array name="hotspot_data_limit_action_values" translatable="false">
+        <item>0</item>
+        <item>1</item>
+    </string-array>
 </resources>
