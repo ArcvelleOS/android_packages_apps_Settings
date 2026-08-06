@@ -11,6 +11,7 @@ import android.app.ActivityManager
 import android.app.ObscuraManager
 import android.app.role.RoleManager
 import android.content.Context
+import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.os.UserHandle
@@ -43,11 +44,13 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
@@ -68,6 +71,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -451,6 +455,20 @@ private fun ObscuraAppItem(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
+                // Launch button for hidden apps
+                if (entry.isHidden || entry.isLauncherHidden) {
+                    val currentContext = LocalContext.current
+                    FilterChip(
+                        selected = false,
+                        onClick = { launchApp(currentContext, entry.packageName) },
+                        label = { Text("Launch", style = MaterialTheme.typography.labelSmall) },
+                        leadingIcon = { Icon(Icons.Default.PlayArrow, null, Modifier.size(16.dp)) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer
+                        )
+                    )
+                }
                 FilterChip(
                     selected = entry.isLauncherHidden,
                     onClick = { onToggle(entry.copy(isLauncherHidden = !entry.isLauncherHidden)) },
@@ -537,5 +555,14 @@ private fun forceStopPackage(context: Context, packageName: String) {
         am.forceStopPackageAsUser(packageName, UserHandle.USER_CURRENT)
     } catch (e: Exception) {
         Log.e("Obscura", "Error force stopping $packageName", e)
+    }
+}
+
+private fun launchApp(context: Context, packageName: String) {
+    try {
+        val obscuraManager = context.getSystemService(Context.OBSCURA_SERVICE) as? ObscuraManager
+        obscuraManager?.launchHiddenApp(packageName)
+    } catch (e: Exception) {
+        Log.e("Obscura", "Error launching $packageName", e)
     }
 }
