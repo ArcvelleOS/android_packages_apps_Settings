@@ -351,4 +351,8 @@
     <string name="gs_loading_apps">Loading apps\u2026</string>
     <string name="gs_failed">Failed: %s</string>
     <string name="spoofing_category_summary">Play Integrity, TrickyStore and game spoofing</string>
+
+    <!-- Wallpaper zoom -->
+    <string name="wallpaper_zoom_title">Wallpaper zoom</string>
+    <string name="wallpaper_zoom_summary">Turn off to show the wallpaper without extra zoom</string>
 </resources>
