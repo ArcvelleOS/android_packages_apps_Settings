@@ -10,40 +10,52 @@ import android.app.ActivityManager
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.os.UserHandle
 import android.provider.Settings
 import android.util.Base64
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
+import androidx.lifecycle.lifecycleScope
 import androidx.preference.Preference
 import com.android.internal.logging.nano.MetricsProto
 import com.android.settings.R
 import com.android.settings.SettingsPreferenceFragment
 import java.nio.charset.StandardCharsets
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class TrickyStore : SettingsPreferenceFragment() {
+
+    private var rkpController: DuckRkpPreferenceController? = null
 
     private val keyboxPicker = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             result.data?.data?.let { uri ->
-                try {
-                    val bytes = requireContext().contentResolver.openInputStream(uri)?.use { it.readBytes() }
-                        ?: ByteArray(0)
-                    val encoded = Base64.encodeToString(bytes, Base64.NO_WRAP)
-                    Settings.Secure.putString(
-                        requireContext().contentResolver,
-                        KEYBOX_KEY,
-                        encoded
+                lifecycleScope.launch {
+                    val context = requireContext()
+                    val imported = withContext(Dispatchers.IO) {
+                        runCatching {
+                            val bytes = context.contentResolver.openInputStream(uri)?.use {
+                                it.readNBytes(1024 * 1024 + 1)
+                            } ?: throw IllegalArgumentException("Cannot read keybox")
+                            require(bytes.size <= 1024 * 1024) { "Keybox is too large" }
+                            ActivityManager.getService().setSpoofTrickyStoreKeyBox(
+                                Base64.encodeToString(bytes, Base64.NO_WRAP))
+                        }
+                    }
+                    if (!isAdded) return@launch
+                    imported.fold(
+                        onSuccess = {
+                            killGms()
+                            toast(getString(R.string.ts_keybox_imported))
+                            refreshStatus()
+                        },
+                        onFailure = { toast(getString(R.string.ts_failed, it.message ?: "")) }
                     )
-                    killGms()
-                    toast(getString(R.string.ts_keybox_imported))
-                    refreshStatus()
-                } catch (e: Exception) {
-                    toast(getString(R.string.ts_failed, e.message ?: ""))
                 }
             }
         }
@@ -75,6 +87,9 @@ class TrickyStore : SettingsPreferenceFragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         addPreferencesFromResource(R.xml.tricky_store)
+        rkpController = DuckRkpPreferenceController(this) { refreshStatus() }.also { it.start() }
+        findPreference<Preference>("ts_import_keybox")?.isEnabled =
+            UserHandle.myUserId() == UserHandle.USER_SYSTEM
 
         findPreference<Preference>("ts_import_keybox")?.setOnPreferenceClickListener {
             val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
@@ -115,7 +130,7 @@ class TrickyStore : SettingsPreferenceFragment() {
     private fun refreshStatus() {
         val keyboxExists = !Settings.Secure.getString(
             requireContext().contentResolver, KEYBOX_KEY
-        ).isNullOrEmpty()
+        ).isNullOrEmpty() || rkpController?.hasKeybox == true
 
         val targetContent = Settings.Secure.getString(requireContext().contentResolver, TARGET_KEY)
         val targetCount = if (!targetContent.isNullOrEmpty()) {
@@ -123,10 +138,14 @@ class TrickyStore : SettingsPreferenceFragment() {
         } else 0
 
         findPreference<Preference>("ts_import_keybox")?.summary =
-            if (keyboxExists) getString(R.string.ts_keybox_installed)
-            else getString(R.string.ts_no_keybox)
+            when {
+                rkpController?.hasGeneratedKeybox == true -> getString(R.string.ts_rkp_keybox_stored)
+                keyboxExists -> getString(R.string.ts_keybox_installed)
+                else -> getString(R.string.ts_no_keybox)
+            }
 
-        findPreference<Preference>("ts_delete_keybox")?.isEnabled = keyboxExists
+        findPreference<Preference>("ts_delete_keybox")?.isEnabled =
+            keyboxExists && UserHandle.myUserId() == UserHandle.USER_SYSTEM
 
         findPreference<Preference>("ts_manage_targets")?.summary =
             if (targetCount > 0) getString(R.string.ts_target_apps_count, targetCount)
@@ -170,13 +189,19 @@ class TrickyStore : SettingsPreferenceFragment() {
             .setTitle(R.string.ts_delete_keybox_title)
             .setMessage(R.string.ts_delete_keybox_message)
             .setPositiveButton(R.string.delete) { _, _ ->
-                try {
-                    Settings.Secure.putString(
-                        requireContext().contentResolver, KEYBOX_KEY, "")
-                    toast(getString(R.string.ts_keybox_deleted))
-                    refreshStatus()
-                } catch (e: Exception) {
-                    toast(getString(R.string.ts_failed, e.message ?: ""))
+                lifecycleScope.launch {
+                    val deleted = withContext(Dispatchers.IO) {
+                        runCatching { ActivityManager.getService().setSpoofTrickyStoreKeyBox("") }
+                    }
+                    if (!isAdded) return@launch
+                    deleted.fold(
+                        onSuccess = {
+                            killGms()
+                            toast(getString(R.string.ts_keybox_deleted))
+                            refreshStatus()
+                        },
+                        onFailure = { toast(getString(R.string.ts_failed, it.message ?: "")) }
+                    )
                 }
             }
             .setNegativeButton(android.R.string.cancel, null)

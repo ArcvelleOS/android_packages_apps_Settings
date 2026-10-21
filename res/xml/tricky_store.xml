@@ -33,6 +33,28 @@
     </PreferenceCategory>
 
     <PreferenceCategory
+        android:key="ts_rkp_category"
+        android:title="@string/ts_rkp_title">
+
+        <androidx.preference.SwitchPreferenceCompat
+            android:key="ts_rkp_enabled"
+            android:title="@string/ts_rkp_enabled"
+            android:summary="@string/ts_rkp_enabled_summary"
+            android:persistent="false" />
+
+        <Preference
+            android:key="ts_rkp_provision"
+            android:title="@string/ts_rkp_provision"
+            android:summary="@string/ts_rkp_provision_summary" />
+
+        <Preference
+            android:key="ts_rkp_status"
+            android:title="@string/ts_rkp_status"
+            android:summary="@string/ts_rkp_unavailable"
+            android:selectable="false" />
+    </PreferenceCategory>
+
+    <PreferenceCategory
         android:key="ts_target_category"
         android:title="@string/ts_target_configuration">
 
