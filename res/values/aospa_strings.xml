@@ -228,4 +228,12 @@
     <string name="hotspot_data_limit_size_500mb">500 MB</string>
     <string name="hotspot_data_limit_size_1gb">1 GB</string>
     <string name="hotspot_data_limit_size_5gb">5 GB</string>
+
+    <!-- Flashlight behavior for incoming calls -->
+    <string name="flashlight_on_call_title">Blink flashlight for call</string>
+    <string name="flashlight_on_call_disabled">Disabled</string>
+    <string name="flashlight_on_call_ringer">When ringing</string>
+    <string name="flashlight_on_call_no_ringer">When ringer is silent</string>
+    <string name="flashlight_on_call_silent">When entirely silent (no ringer or vibrator)</string>
+    <string name="flashlight_on_call_always">Always</string>
 </resources>
