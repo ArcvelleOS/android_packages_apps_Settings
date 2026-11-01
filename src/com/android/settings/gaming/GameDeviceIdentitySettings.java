@@ -58,6 +58,7 @@ public class GameDeviceIdentitySettings extends SettingsPreferenceFragment {
     private static final int MAX_GAME_PROFILE_JSON_BYTES = 256 * 1024;
     private static final int MAX_IMPORTED_PACKAGES = 512;
     private static final String PROFILE_DIALOG_TAG = "game_identity_profile";
+    private static final String APP_DIALOG_TAG = "game_identity_app";
 
     private MainSwitchPreference mEnabled;
     private PreferenceCategory mGames;
@@ -120,6 +121,10 @@ public class GameDeviceIdentitySettings extends SettingsPreferenceFragment {
         screen.addPreference(footer);
 
         getChildFragmentManager().setFragmentResultListener(
+                GameDeviceIdentityAppDialog.RESULT_KEY, this, (key, result) ->
+                        showAddedAppProfileDialog(context, result.getString(
+                                GameDeviceIdentityAppDialog.RESULT_PACKAGE, "")));
+        getChildFragmentManager().setFragmentResultListener(
                 GameDeviceIdentityProfileDialog.RESULT_KEY, this, (key, result) -> {
                     final String packageName = result.getString(
                             GameDeviceIdentityProfileDialog.RESULT_PACKAGE, "");
@@ -153,16 +158,18 @@ public class GameDeviceIdentitySettings extends SettingsPreferenceFragment {
                 : R.string.game_device_identity_enable_summary);
         mGames.removeAll();
 
-        final List<ApplicationInfo> installedGames = getInstalledGames(context.getPackageManager());
+        final JSONObject identities = readIdentities(context);
+        final List<ApplicationInfo> installedGames = getInstalledGames(context.getPackageManager(),
+                identities);
         if (installedGames.isEmpty()) {
             final LayoutPreference empty = new LayoutPreference(context,
                     R.layout.game_device_identity_empty);
             empty.setSelectable(false);
             mGames.addPreference(empty);
+            addAppPreference(context);
             return;
         }
 
-        final JSONObject identities = readIdentities(context);
         for (ApplicationInfo app : installedGames) {
             final Preference preference = new Preference(context);
             final String packageName = app.packageName;
@@ -197,12 +204,38 @@ public class GameDeviceIdentitySettings extends SettingsPreferenceFragment {
             });
             mGames.addPreference(preference);
         }
+        addAppPreference(context);
     }
 
-    private List<ApplicationInfo> getInstalledGames(PackageManager packageManager) {
+    private void addAppPreference(Context context) {
+        final Preference addApp = new Preference(context);
+        addApp.setKey("add_game_identity_app");
+        addApp.setPersistent(false);
+        addApp.setTitle(R.string.game_device_identity_add_app_title);
+        addApp.setSummary(R.string.game_device_identity_add_app_summary);
+        addApp.setIcon(R.drawable.ic_add_24dp);
+        addApp.setWidgetLayoutResource(R.layout.game_device_identity_chevron);
+        addApp.setOnPreferenceClickListener(preference -> {
+            if (getChildFragmentManager().findFragmentByTag(APP_DIALOG_TAG) == null) {
+                final ArrayList<String> listed = new ArrayList<>();
+                for (ApplicationInfo app : getInstalledGames(context.getPackageManager(),
+                        readIdentities(context))) {
+                    listed.add(app.packageName);
+                }
+                GameDeviceIdentityAppDialog.newInstance(listed)
+                        .show(getChildFragmentManager(), APP_DIALOG_TAG);
+            }
+            return true;
+        });
+        mGames.addPreference(addApp);
+    }
+
+    private List<ApplicationInfo> getInstalledGames(PackageManager packageManager,
+            JSONObject identities) {
         final List<ApplicationInfo> games = new ArrayList<>();
         for (ApplicationInfo app : packageManager.getInstalledApplications(0)) {
-            if (app.category == ApplicationInfo.CATEGORY_GAME && app.enabled
+            if ((app.category == ApplicationInfo.CATEGORY_GAME
+                    || identities.has(app.packageName)) && app.enabled
                     && !TextUtils.equals(app.packageName, getContext().getPackageName())
                     && packageManager.getLaunchIntentForPackage(app.packageName) != null) {
                 games.add(app);
@@ -271,7 +304,7 @@ public class GameDeviceIdentitySettings extends SettingsPreferenceFragment {
             if (!isValidPackageName(packageName)) continue;
             try {
                 final ApplicationInfo app = packageManager.getApplicationInfo(packageName, 0);
-                if (app.category != ApplicationInfo.CATEGORY_GAME || !app.enabled
+                if (!app.enabled || TextUtils.equals(packageName, context.getPackageName())
                         || packageManager.getLaunchIntentForPackage(packageName) == null) {
                     continue;
                 }
@@ -325,6 +358,33 @@ public class GameDeviceIdentitySettings extends SettingsPreferenceFragment {
             return;
         }
         importGameProfiles(getPrefContext(), data.getData());
+    }
+
+    private void showAddedAppProfileDialog(Context context, String packageName) {
+        final PackageManager packageManager = context.getPackageManager();
+        try {
+            if (!isValidPackageName(packageName)
+                    || packageManager.getLaunchIntentForPackage(packageName) == null) {
+                Toast.makeText(context, R.string.game_device_identity_save_error,
+                        Toast.LENGTH_SHORT).show();
+                return;
+            }
+            final CharSequence label = packageManager.getApplicationLabel(
+                    packageManager.getApplicationInfo(packageName, 0));
+            final JSONObject identities = readIdentities(context);
+            final JSONObject customProfile = identities.optJSONObject(packageName);
+            final String currentProfile = identities.optString(packageName, VALUE_NONE);
+            final String selectedProfile = customProfile != null ? VALUE_CUSTOM
+                    : isKnownProfile(currentProfile) ? currentProfile : VALUE_NONE;
+            if (getChildFragmentManager().findFragmentByTag(PROFILE_DIALOG_TAG) == null) {
+                GameDeviceIdentityProfileDialog.newInstance(packageName, label.toString(),
+                        selectedProfile, customProfile == null ? null
+                                : getCustomProfileSummary(context, customProfile).toString())
+                        .show(getChildFragmentManager(), PROFILE_DIALOG_TAG);
+            }
+        } catch (PackageManager.NameNotFoundException e) {
+            Log.w(TAG, "Unable to add app to game identities: " + packageName, e);
+        }
     }
 
     private void importGameProfiles(Context context, Uri uri) {
