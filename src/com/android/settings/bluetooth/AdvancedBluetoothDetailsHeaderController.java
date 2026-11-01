@@ -265,7 +265,7 @@ public class AdvancedBluetoothDetailsHeaderController extends BasePreferenceCont
                     Suppliers.memoize(() -> isUntetheredHeadset(mCachedDevice.getDevice()));
             Supplier<BatteryLevelsInfo> battery =
                     Suppliers.memoize(() -> mCachedDevice.getBatteryLevelsInfo());
-            Supplier<String> summaryText =
+            Supplier<String> connectionSummaryText =
                     Suppliers.memoize(
                             () -> {
                                 if (disconnected.get() || isUntetheredHeadset.get()) {
@@ -285,6 +285,10 @@ public class AdvancedBluetoothDetailsHeaderController extends BasePreferenceCont
                                                         BluetoothDevice.METADATA_MAIN_BATTERY)
                                                 != BluetoothUtils.META_INT_ERROR);
                             });
+            Supplier<String> summaryText =
+                    Suppliers.memoize(
+                            () -> Utils.appendCodecSummary(
+                                    connectionSummaryText.get(), mCachedDevice));
             Supplier<Boolean> isBattEnabled =
                     Suppliers.memoize(
                             () ->

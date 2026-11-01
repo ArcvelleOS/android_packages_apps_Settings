@@ -31,6 +31,7 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.SystemProperties;
 import android.os.UserHandle;
 import android.provider.Settings;
+import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -503,5 +504,16 @@ public final class Utils {
             }
         }
         group.setVisible(visible);
+    }
+
+    /** Appends the active codec, when there is one to show, to a connection summary. */
+    @Nullable
+    public static String appendCodecSummary(
+            @Nullable String summary, CachedBluetoothDevice device) {
+        final String codec = device.getActiveCodecSummary();
+        if (TextUtils.isEmpty(codec)) {
+            return summary;
+        }
+        return TextUtils.isEmpty(summary) ? codec : summary + " \u2022 " + codec;
     }
 }

@@ -21,6 +21,7 @@ import static android.bluetooth.BluetoothDevice.BOND_NONE;
 import android.app.Activity;
 import android.app.settings.SettingsEnums;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothCodecStatus;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.TypedArray;
@@ -139,6 +140,27 @@ public class BluetoothDeviceDetailsFragment extends BluetoothDetailsConfigurable
                         @NonNull CachedBluetoothDevice device, int bondState) {
                     if (device.equals(cachedDevice)) {
                         finishFragmentIfNecessary();
+                    }
+                }
+
+                @Override
+                public void onA2dpCodecConfigChanged(
+                        @NonNull CachedBluetoothDevice device,
+                        @NonNull BluetoothCodecStatus codecStatus) {
+                    // The header shows the active codec, which changes without a device
+                    // attribute change.
+                    if (!device.equals(cachedDevice)) {
+                        return;
+                    }
+                    AdvancedBluetoothDetailsHeaderController advanced =
+                            use(AdvancedBluetoothDetailsHeaderController.class);
+                    if (advanced != null && advanced.isAvailable()) {
+                        advanced.refresh();
+                    }
+                    GeneralBluetoothDetailsHeaderController general =
+                            use(GeneralBluetoothDetailsHeaderController.class);
+                    if (general != null) {
+                        general.refresh();
                     }
                 }
             };

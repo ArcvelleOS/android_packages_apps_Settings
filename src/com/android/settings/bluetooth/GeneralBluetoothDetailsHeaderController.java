@@ -83,7 +83,8 @@ public class GeneralBluetoothDetailsHeaderController extends BluetoothDetailsCon
         }
         TextView summary = mLayoutPreference.findViewById(R.id.bt_header_connection_summary);
         if (summary != null) {
-            summary.setText(mCachedDevice.getConnectionSummary());
+            summary.setText(
+                    Utils.appendCodecSummary(mCachedDevice.getConnectionSummary(), mCachedDevice));
         }
         if (!BluetoothUtils.isTemporaryBondDevice(mCachedDevice.getDevice())) {
             ImageButton renameButton = mLayoutPreference.findViewById(R.id.rename_button);
