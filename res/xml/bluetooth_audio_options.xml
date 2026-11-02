@@ -2,6 +2,9 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     android:title="@string/audio_output_bluetooth_options">
 
+    <com.android.settings.bluetooth.BluetoothCodecPreference
+        android:key="bluetooth_audio_codec" />
+
     <com.android.settings.development.bluetooth.BluetoothSampleRateDialogPreference
         android:key="bluetooth_sample_rate_settings"
         android:title="@string/bluetooth_select_a2dp_codec_sample_rate"

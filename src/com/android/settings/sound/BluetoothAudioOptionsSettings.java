@@ -27,6 +27,8 @@ import android.content.IntentFilter;
 import android.os.Bundle;
 
 import com.android.settings.R;
+import com.android.settings.bluetooth.BluetoothCodecPreference;
+import com.android.settings.bluetooth.Utils;
 import com.android.settings.dashboard.DashboardFragment;
 import com.android.settings.development.BluetoothA2dpConfigStore;
 import com.android.settings.development.BluetoothServiceConnectionListener;
@@ -34,6 +36,8 @@ import com.android.settings.development.bluetooth.BluetoothBitPerSampleDialogPre
 import com.android.settings.development.bluetooth.BluetoothChannelModeDialogPreferenceController;
 import com.android.settings.development.bluetooth.BluetoothQualityDialogPreferenceController;
 import com.android.settings.development.bluetooth.BluetoothSampleRateDialogPreferenceController;
+import com.android.settingslib.bluetooth.A2dpProfile;
+import com.android.settingslib.bluetooth.LocalBluetoothManager;
 import com.android.settingslib.core.AbstractPreferenceController;
 
 import java.util.ArrayList;
@@ -47,6 +51,7 @@ public class BluetoothAudioOptionsSettings extends DashboardFragment {
     private final BluetoothA2dpConfigStore mConfigStore = new BluetoothA2dpConfigStore();
     private BluetoothAdapter mAdapter;
     private BluetoothA2dp mA2dp;
+    private BluetoothCodecPreference mCodecPreference;
 
     private final BroadcastReceiver mReceiver =
             new BroadcastReceiver() {
@@ -91,6 +96,8 @@ public class BluetoothAudioOptionsSettings extends DashboardFragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Context context = requireContext();
+        mCodecPreference = findPreference("bluetooth_audio_codec");
+        mCodecPreference.refresh();
         BluetoothManager manager = context.getSystemService(BluetoothManager.class);
         mAdapter = manager == null ? null : manager.getAdapter();
         if (mAdapter != null) {
@@ -98,6 +105,7 @@ public class BluetoothAudioOptionsSettings extends DashboardFragment {
         }
         IntentFilter filter = new IntentFilter(BluetoothA2dp.ACTION_ACTIVE_DEVICE_CHANGED);
         filter.addAction(BluetoothA2dp.ACTION_CODEC_CONFIG_CHANGED);
+        filter.addAction(BluetoothA2dp.ACTION_CONNECTION_STATE_CHANGED);
         context.registerReceiver(mReceiver, filter, Context.RECEIVER_EXPORTED);
     }
 
@@ -130,6 +138,13 @@ public class BluetoothAudioOptionsSettings extends DashboardFragment {
     }
 
     private void notifyControllers(Consumer<BluetoothServiceConnectionListener> action) {
+        LocalBluetoothManager manager = Utils.getLocalBtManager(requireContext());
+        A2dpProfile profile = manager == null ? null : manager.getProfileManager().getA2dpProfile();
+        mCodecPreference.configure(
+                () -> mA2dp == null || profile == null ? null : profile.getActiveDevice(),
+                () -> profile,
+                true);
+        mCodecPreference.refresh();
         for (List<AbstractPreferenceController> controllers : getPreferenceControllers()) {
             for (AbstractPreferenceController controller : controllers) {
                 if (controller instanceof BluetoothServiceConnectionListener) {
