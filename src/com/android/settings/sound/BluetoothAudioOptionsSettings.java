@@ -34,6 +34,7 @@ import com.android.settings.development.BluetoothA2dpConfigStore;
 import com.android.settings.development.BluetoothServiceConnectionListener;
 import com.android.settings.development.bluetooth.BluetoothBitPerSampleDialogPreferenceController;
 import com.android.settings.development.bluetooth.BluetoothChannelModeDialogPreferenceController;
+import com.android.settings.development.bluetooth.BluetoothLhdcQualityDialogPreferenceController;
 import com.android.settings.development.bluetooth.BluetoothQualityDialogPreferenceController;
 import com.android.settings.development.bluetooth.BluetoothSampleRateDialogPreferenceController;
 import com.android.settingslib.bluetooth.A2dpProfile;
@@ -52,6 +53,7 @@ public class BluetoothAudioOptionsSettings extends DashboardFragment {
     private BluetoothAdapter mAdapter;
     private BluetoothA2dp mA2dp;
     private BluetoothCodecPreference mCodecPreference;
+    private boolean mDestroyed;
 
     private final BroadcastReceiver mReceiver =
             new BroadcastReceiver() {
@@ -65,6 +67,10 @@ public class BluetoothAudioOptionsSettings extends DashboardFragment {
             new BluetoothProfile.ServiceListener() {
                 @Override
                 public void onServiceConnected(int profile, BluetoothProfile proxy) {
+                    if (mDestroyed) {
+                        mAdapter.closeProfileProxy(BluetoothProfile.A2DP, proxy);
+                        return;
+                    }
                     mA2dp = (BluetoothA2dp) proxy;
                     notifyControllers(listener -> listener.onBluetoothServiceConnected(mA2dp));
                 }
@@ -72,6 +78,9 @@ public class BluetoothAudioOptionsSettings extends DashboardFragment {
                 @Override
                 public void onServiceDisconnected(int profile) {
                     mA2dp = null;
+                    if (mDestroyed) {
+                        return;
+                    }
                     notifyControllers(
                             BluetoothServiceConnectionListener::onBluetoothServiceDisconnected);
                 }
@@ -111,12 +120,13 @@ public class BluetoothAudioOptionsSettings extends DashboardFragment {
 
     @Override
     public void onDestroy() {
-        super.onDestroy();
+        mDestroyed = true;
+        requireContext().unregisterReceiver(mReceiver);
         if (mAdapter != null && mA2dp != null) {
             mAdapter.closeProfileProxy(BluetoothProfile.A2DP, mA2dp);
             mA2dp = null;
         }
-        requireContext().unregisterReceiver(mReceiver);
+        super.onDestroy();
     }
 
     @Override
@@ -134,11 +144,18 @@ public class BluetoothAudioOptionsSettings extends DashboardFragment {
         controllers.add(
                 new BluetoothQualityDialogPreferenceController(
                         context, getSettingsLifecycle(), mConfigStore));
+        controllers.add(
+                new BluetoothLhdcQualityDialogPreferenceController(
+                        context, getSettingsLifecycle(), mConfigStore));
         return controllers;
     }
 
     private void notifyControllers(Consumer<BluetoothServiceConnectionListener> action) {
-        LocalBluetoothManager manager = Utils.getLocalBtManager(requireContext());
+        Context context = getContext();
+        if (mDestroyed || context == null) {
+            return;
+        }
+        LocalBluetoothManager manager = Utils.getLocalBtManager(context);
         A2dpProfile profile = manager == null ? null : manager.getProfileManager().getA2dpProfile();
         mCodecPreference.configure(
                 () -> mA2dp == null || profile == null ? null : profile.getActiveDevice(),
