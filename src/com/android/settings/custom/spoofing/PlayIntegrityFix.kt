@@ -434,6 +434,16 @@ class PlayIntegrityFix : SettingsPreferenceFragment() {
             return emptyList()
         }
 
+        private fun releaseForBuildId(buildId: String?): String {
+            val id = buildId.orEmpty()
+            return when {
+                listOf("AP2", "AP1", "UP1", "UD1", "UQ1").any { id.startsWith(it) } -> "14"
+                listOf("AP3", "AP4", "BP1", "BP2", "VP1").any { id.startsWith(it) } -> "15"
+                listOf("CP1", "CP2", "CP3", "WP1", "WP2").any { id.startsWith(it) } -> "16"
+                else -> "17"
+            }
+        }
+
         /**
          * Phase 2: Fetch OTA metadata for a specific device and build pif JSON.
          */
@@ -447,8 +457,9 @@ class PlayIntegrityFix : SettingsPreferenceFragment() {
                     ?: return PifFetchResult.Error("Could not extract security patch")
 
                 val fpParts = fingerprint.split("/")
-                val release = fpParts.getOrNull(2)?.substringAfter(":", "") ?: ""
                 val buildId = fpParts.getOrNull(3) ?: ""
+                val release = fpParts.getOrNull(2)?.substringAfter(":", "")
+                    .orEmpty().ifEmpty { releaseForBuildId(buildId) }
 
                 val pifJson = JSONObject().apply {
                     put("TYPE", "user")
@@ -602,7 +613,7 @@ class PlayIntegrityFix : SettingsPreferenceFragment() {
                     put("MANUFACTURER", "Google")
                     put("MODEL", pifDevice.model)
                     put("PRODUCT", pifDevice.product)
-                    put("RELEASE", "CANARY")
+                    put("RELEASE", releaseForBuildId(id))
                     put("SECURITY_PATCH", securityPatch)
                     put("DEVICE_INITIAL_SDK_INT", "32")
                     put("DEBUG", false)
