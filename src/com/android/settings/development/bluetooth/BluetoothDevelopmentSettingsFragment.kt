@@ -200,6 +200,7 @@ class BluetoothDevelopmentSettingsFragment :
                     a2dpConfigStore,
                 ),
                 BluetoothQualityDialogPreferenceController(context, lifecycle, a2dpConfigStore),
+                BluetoothLhdcQualityDialogPreferenceController(context, lifecycle, a2dpConfigStore),
                 BluetoothChannelModeDialogPreferenceController(context, lifecycle, a2dpConfigStore),
                 BluetoothHDAudioPreferenceController(context, lifecycle, a2dpConfigStore, fragment),
             )
