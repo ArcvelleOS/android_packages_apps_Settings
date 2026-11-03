@@ -207,6 +207,7 @@ import com.android.settings.sound.AudioOutputSettings;
 import com.android.settings.sound.MediaControlsSettings;
 import com.android.settings.supervision.SupervisionDashboardFragment;
 import com.android.settings.support.SupportDashboardActivity;
+import com.android.settings.system.MiscellaneousSettings;
 import com.android.settings.system.ResetDashboardFragment;
 import com.android.settings.system.ShadePanelsFragment;
 import com.android.settings.system.SystemDashboardFragment;
@@ -370,6 +371,7 @@ public class SettingsGateway {
             WifiInfo.class.getName(),
             MainClear.class.getName(),
             MainClearConfirm.class.getName(),
+            MiscellaneousSettings.class.getName(),
             ResetDashboardFragment.class.getName(),
             NightDisplaySettings.class.getName(),
             ManageDomainUrls.class.getName(),

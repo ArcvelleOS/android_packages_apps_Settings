@@ -236,4 +236,8 @@
     <string name="flashlight_on_call_no_ringer">When ringer is silent</string>
     <string name="flashlight_on_call_silent">When entirely silent (no ringer or vibrator)</string>
     <string name="flashlight_on_call_always">Always</string>
+
+    <!-- Miscellaneous settings -->
+    <string name="miscellaneous_settings_title">Miscellaneous</string>
+    <string name="miscellaneous_settings_summary">System tweaks and developer controls</string>
 </resources>

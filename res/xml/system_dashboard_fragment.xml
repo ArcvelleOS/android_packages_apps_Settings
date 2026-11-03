@@ -163,6 +163,13 @@
         android:order="-350"
         settings:controller="com.android.settings.widget.SystemAdvancedCategoryController">
 
+        <Preference
+            android:key="miscellaneous_settings"
+            android:title="@string/miscellaneous_settings_title"
+            android:summary="@string/miscellaneous_settings_summary"
+            android:icon="@drawable/ic_settings_miscellaneous"
+            android:fragment="com.android.settings.system.MiscellaneousSettings" />
+
         <com.android.settings.spa.preference.ComposePreference
             android:key="developer_options"
             settings:controller="com.android.settings.system.DeveloperOptionsController"/>
