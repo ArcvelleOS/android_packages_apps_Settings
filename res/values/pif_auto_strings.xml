@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="pif_fetch_auto">Fetch fingerprint automatically</string>
+    <string name="pif_fetch_auto_summary">Choose and apply a Pixel profile from the source used by JerryManager. Integrity results may vary.</string>
+    <string name="pif_auto_applied">%1$s profile applied. Run an integrity check to verify.</string>
+</resources>

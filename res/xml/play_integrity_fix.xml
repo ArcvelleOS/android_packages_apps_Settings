@@ -28,6 +28,11 @@
             android:selectable="false" />
 
         <Preference
+            android:key="pif_fetch_auto"
+            android:title="@string/pif_fetch_auto"
+            android:summary="@string/pif_fetch_auto_summary" />
+
+        <Preference
             android:key="pif_fetch_beta"
             android:title="@string/pif_fetch_pixel_beta"
             android:summary="@string/pif_fetch_pixel_beta_summary" />

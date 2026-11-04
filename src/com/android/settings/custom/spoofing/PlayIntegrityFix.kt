@@ -24,6 +24,7 @@ import com.android.settings.R
 import com.android.settings.SettingsPreferenceFragment
 import java.net.URL
 import java.nio.charset.StandardCharsets
+import java.time.LocalDate
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -68,6 +69,11 @@ class PlayIntegrityFix : SettingsPreferenceFragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         addPreferencesFromResource(R.xml.play_integrity_fix)
+
+        findPreference<Preference>("pif_fetch_auto")?.setOnPreferenceClickListener {
+            fetchAutomaticProfile()
+            true
+        }
 
         findPreference<Preference>("pif_fetch_beta")?.setOnPreferenceClickListener {
             showChannelSelectionDialog()
@@ -179,6 +185,40 @@ class PlayIntegrityFix : SettingsPreferenceFragment() {
             .show()
     }
 
+    private fun fetchAutomaticProfile() {
+        val fetchPref = findPreference<Preference>("pif_fetch_auto") ?: return
+        val actions = listOf("pif_fetch_auto", "pif_fetch_beta", "pif_import_config", "pif_delete_config")
+        actions.forEach { findPreference<Preference>(it)?.isEnabled = false }
+        fetchPref.summary = getString(R.string.pif_fetching)
+        scope.launch {
+            try {
+                val result = withContext(Dispatchers.IO) { fetchAutomaticPif() }
+                when (result) {
+                    is PifFetchResult.Success -> {
+                        check(Settings.Secure.putString(requireContext().contentResolver,
+                            PIF_CONFIG_KEY, result.pifData.toString(2))) {
+                            "Could not save profile"
+                        }
+                        killPackage(VENDING_PACKAGE)
+                        toast(getString(R.string.pif_auto_applied, result.model))
+                        refreshStatus()
+                    }
+                    is PifFetchResult.Error -> toast(getString(R.string.pif_failed, result.message))
+                }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                toast(getString(R.string.pif_failed, e.message ?: ""))
+            } finally {
+                if (isAdded) {
+                    actions.forEach { findPreference<Preference>(it)?.isEnabled = true }
+                    fetchPref.summary = getString(R.string.pif_fetch_auto_summary)
+                    refreshStatus()
+                }
+            }
+        }
+    }
+
     private fun showChannelSelectionDialog() {
         val channels = arrayOf(
             getString(R.string.pif_channel_latest_release),
@@ -198,6 +238,7 @@ class PlayIntegrityFix : SettingsPreferenceFragment() {
         val fetchPref = findPreference<Preference>("pif_fetch_beta") ?: return
         fetchPref.summary = getString(R.string.pif_fetching)
         fetchPref.isEnabled = false
+        findPreference<Preference>("pif_fetch_auto")?.isEnabled = false
 
         scope.launch {
             try {
@@ -232,6 +273,7 @@ class PlayIntegrityFix : SettingsPreferenceFragment() {
             } finally {
                 fetchPref.summary = getString(R.string.pif_fetch_pixel_beta_summary)
                 fetchPref.isEnabled = true
+                findPreference<Preference>("pif_fetch_auto")?.isEnabled = true
             }
         }
     }
@@ -240,6 +282,7 @@ class PlayIntegrityFix : SettingsPreferenceFragment() {
         val fetchPref = findPreference<Preference>("pif_fetch_beta")
         fetchPref?.summary = getString(R.string.pif_generating)
         fetchPref?.isEnabled = false
+        findPreference<Preference>("pif_fetch_auto")?.isEnabled = false
 
         scope.launch {
             try {
@@ -269,6 +312,7 @@ class PlayIntegrityFix : SettingsPreferenceFragment() {
             } finally {
                 fetchPref?.summary = getString(R.string.pif_fetch_pixel_beta_summary)
                 fetchPref?.isEnabled = true
+                findPreference<Preference>("pif_fetch_auto")?.isEnabled = true
             }
         }
     }
@@ -368,6 +412,86 @@ class PlayIntegrityFix : SettingsPreferenceFragment() {
                 }
             }
             return json.toString(2)
+        }
+
+        private fun parseAutomaticProfile(raw: String, device: String): PifFetchResult.Success {
+            val fields = readConfigData(raw)
+            val fingerprint = fields["FINGERPRINT"].orEmpty()
+            val parts = Regex(
+                """google/(${device}_beta)/($device):(CANARY|[0-9]+)/([A-Za-z0-9._-]+)/([A-Za-z0-9._-]+):user/release-keys"""
+            ).matchEntire(fingerprint) ?: error("Invalid Pixel fingerprint")
+            val model = fields["MODEL"].orEmpty()
+            require(model == DEVICE_MODEL_MAP[device]) { "Unexpected Pixel model" }
+            require(fields["MANUFACTURER"] == "Google") { "Invalid manufacturer" }
+            val patch = fields["SECURITY_PATCH"].orEmpty()
+            LocalDate.parse(patch)
+            val initialSdk = fields["DEVICE_INITIAL_SDK_INT"]?.toIntOrNull()
+            require(initialSdk != null && initialSdk in 21..100) { "Invalid initial SDK" }
+            val id = parts.groupValues[4]
+            val release = parts.groupValues[3]
+            val json = JSONObject().apply {
+                put("TYPE", "user")
+                put("TAGS", "release-keys")
+                put("ID", id)
+                put("BRAND", "google")
+                put("DEVICE", device)
+                put("FINGERPRINT", fingerprint)
+                put("MANUFACTURER", "Google")
+                put("MODEL", model)
+                put("PRODUCT", parts.groupValues[1])
+                put("RELEASE", if (release == "CANARY") releaseForBuildId(id) else release)
+                put("SECURITY_PATCH", patch)
+                put("DEVICE_INITIAL_SDK_INT", initialSdk.toString())
+                put("SDK_INT", "32")
+                put("DEBUG", false)
+            }
+            return PifFetchResult.Success(model, json)
+        }
+
+        private fun fetchAutomaticPif(): PifFetchResult {
+            // JerryManager uses this feed and retries downloads, not integrity verdicts.
+            val sources = listOf(
+                "https://raw.githubusercontent.com/KOWX712/PlayIntegrityFix/bot/device_prop",
+                "https://fastly.jsdelivr.net/gh/KOWX712/PlayIntegrityFix@bot/device_prop"
+            )
+            for (device in DEVICE_MODEL_MAP.keys.shuffled().take(4)) {
+                for (source in sources) {
+                    try {
+                        val connection = URL("$source/${device}_beta.prop").openConnection().apply {
+                            connectTimeout = 10000
+                            readTimeout = 10000
+                        }
+                        val raw = connection.getInputStream().use { input ->
+                            val bytes = input.readNBytes(16385)
+                            require(bytes.size <= 16384) { "Profile too large" }
+                            String(bytes, StandardCharsets.UTF_8)
+                        }
+                        return parseAutomaticProfile(raw, device)
+                    } catch (_: Exception) {
+                        continue
+                    }
+                }
+            }
+            val (devices, apiKey) = fetchAvailableCanaryDevices()
+            if (!apiKey.isNullOrEmpty()) {
+                for (device in devices.shuffled().take(4)) {
+                    val result = buildCanaryPifFromDevice(device, apiKey)
+                    if (result is PifFetchResult.Success) {
+                        val initialSdk = when (device.device) {
+                            "oriole", "raven" -> 31
+                            "bluejay" -> 32
+                            "panther", "cheetah", "lynx", "felix", "tangorpro" -> 33
+                            "shiba", "husky", "akita", "tokay", "caiman", "komodo", "comet" -> 34
+                            "tegu", "stallion" -> 35
+                            "frankel", "blazer", "mustang", "rango" -> 36
+                            else -> continue
+                        }
+                        result.pifData.put("DEVICE_INITIAL_SDK_INT", initialSdk.toString())
+                        return result
+                    }
+                }
+            }
+            return PifFetchResult.Error("Could not fetch a profile. Current configuration kept.")
         }
 
         private fun fetchPartialUrl(url: String, maxBytes: Int): String {
