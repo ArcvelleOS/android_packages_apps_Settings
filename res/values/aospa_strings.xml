@@ -5,6 +5,9 @@
 -->
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
 
+    <!-- ArcvelleOS version -->
+    <string name="aospa_version">ArcvelleOS version</string>
+
     <!-- QS brightness slider -->
     <string name="qs_show_brightness_title">Brightness slider</string>
     <string name="qs_show_brightness_hide">Hide</string>
