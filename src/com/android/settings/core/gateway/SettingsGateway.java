@@ -241,6 +241,7 @@ public class SettingsGateway {
      * security exception if the fragment it needs to display is not in this list.
      */
     public static final String[] ENTRY_FRAGMENTS = {
+            "com.android.settings.custom.obscura.ObscuraAppSettings",
             ScreenRefreshRateFragment.class.getName(),
             PerAppRefreshRateFragment.class.getName(),
             AdvancedConnectedDeviceDashboardFragment.class.getName(),
