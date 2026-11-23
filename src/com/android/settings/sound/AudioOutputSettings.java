@@ -296,7 +296,7 @@ public class AudioOutputSettings extends DashboardFragment {
                 String unknown = getString(R.string.audio_output_unreported);
                 setValue(
                         "audio_output_codec",
-                        config == null ? unknown : AudioOutputInfo.codecName(context, config),
+                        AudioOutputInfo.reportedCodecName(context, config),
                         report);
                 setValue(
                         "audio_output_rate",

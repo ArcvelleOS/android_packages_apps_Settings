@@ -13,13 +13,13 @@
 package com.android.settings.sound;
 
 import android.bluetooth.BluetoothCodecConfig;
-import android.bluetooth.BluetoothCodecType;
 import android.content.Context;
 import android.media.AudioDeviceInfo;
 import android.media.AudioFormat;
 import android.media.AudioProfile;
 
 import com.android.settings.R;
+import com.android.settingslib.bluetooth.A2dpProfile;
 
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -42,18 +42,13 @@ final class AudioOutputInfo {
     private AudioOutputInfo() {}
 
     static String codecName(Context context, BluetoothCodecConfig config) {
-        BluetoothCodecType type = config.getExtendedCodecType();
-        String name = type == null ? null : type.getCodecName();
-        if (name == null || name.isBlank()) {
-            type = BluetoothCodecType.createFromType(config.getCodecType());
-            name = type == null ? null : type.getCodecName();
-        }
-        return name == null
-                        || name.isBlank()
-                        || name.startsWith("UNKNOWN CODEC")
-                        || name.equals("INVALID CODEC")
-                ? context.getString(R.string.audio_output_unreported)
-                : name.trim();
+        String name = A2dpProfile.getCodecName(config);
+        return name != null ? name : unknown(context);
+    }
+
+    static String reportedCodecName(Context context, BluetoothCodecConfig config) {
+        String name = A2dpProfile.getReportedCodecName(context, config);
+        return name != null ? name : unknown(context);
     }
 
     static String codecRates(Context context, int mask, boolean current) {

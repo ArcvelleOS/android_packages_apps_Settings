@@ -95,14 +95,14 @@ public final class BluetoothCodecPreference extends ListPreference {
         setEntries(choices.values().toArray(new CharSequence[0]));
         setEntryValues(choices.keySet().toArray(new CharSequence[0]));
         setEnabled(!choices.isEmpty());
-        BluetoothCodecType current =
-                status == null || status.getCodecConfig() == null
-                        ? null
-                        : codecType(status.getCodecConfig());
+        BluetoothCodecConfig currentConfig = status == null ? null : status.getCodecConfig();
+        BluetoothCodecType current = currentConfig == null ? null : codecType(currentConfig);
         String id = current == null ? null : Long.toString(current.getCodecId());
         setValue(choices.containsKey(id) ? id : null);
         if (id != null && choices.containsKey(id)) {
-            setSummary(choices.get(id));
+            String reported = mRequireActiveDevice
+                    ? A2dpProfile.getReportedCodecName(getContext(), currentConfig) : null;
+            setSummary(reported != null ? reported : choices.get(id));
         } else {
             setSummary(R.string.bluetooth_details_audio_codec_unavailable);
         }
